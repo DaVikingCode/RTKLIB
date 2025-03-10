@@ -36,3 +36,4 @@ Pre-complied linux packages are available at https://build.opensuse.org/package/
 
 The last step will copy the compiled executables into a new directory RTKLIB_bin next to the rtklib source directory.
 
+Used in project [ARDPI](https://github.com/DaVikingCode/ARDPI-SimulateurAerien-AR)
