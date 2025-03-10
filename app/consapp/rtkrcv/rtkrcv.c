@@ -36,6 +36,7 @@
 *                           add option -w
 *           2017/09/01 1.21 add command ssr
 *-----------------------------------------------------------------------------*/
+#define ENAGLO
 #define _POSIX_C_SOURCE 199506
 #include <stdlib.h>
 #include <signal.h>
@@ -44,14 +45,18 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
+//#include <sys/socket.h>
+#include <winsock2.h>
+/*#include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
-#include <netdb.h>
+#include <netdb.h>*/
 #include <errno.h>
 #include "rtklib.h"
 #include "vt.h"
+#include <pthread/pthread.h>
+
+typedef int socklen_t;
 
 #define PRGNAME     "rtkrcv"            /* program name */
 #define CMDPROMPT   "rtkrcv> "          /* command prompt */
@@ -488,8 +493,10 @@ static int startsvr(vt_t *vt)
                      solopt,&moni,errmsg)) {
         trace(2,"rtk server start error (%s)\n",errmsg);
         vt_printf(vt,"rtk server start error (%s)\n",errmsg);
+        fprintf(stderr, "rtk server start error (%s)\n", errmsg);
         return 0;
     }
+    printf("Server started.\n");
     return 1;
 }
 /* stop rtk server -----------------------------------------------------------*/
@@ -651,7 +658,7 @@ static void prstatus(vt_t *vt)
     gtime_t eventime={0};
     const char *freq[]={"-","L1","L1+L2","L1+L2+E5b","L1+L2+E5b+L5","5","6","7"};
     rtcm_t rtcm[3];
-    pthread_t thread;
+    //pthread_t thread;
     int i,j,n,cycle,state,rtkstat,nsat0,nsat1,prcout,rcvcount,tmcount,timevalid,nave;
     int cputime,nb[3]={0},nmsg[3][10]={{0}};
     char tstr[40],tmstr[40],s[1024],*p;
@@ -662,7 +669,7 @@ static void prstatus(vt_t *vt)
     
     rtksvrlock(&svr);
     rtk=svr.rtk;
-    thread=svr.thread;
+    //thread=svr.thread;
     cycle=svr.cycle;
     state=svr.state;
     rtkstat=svr.rtk.sol.stat;
@@ -701,7 +708,7 @@ static void prstatus(vt_t *vt)
     
     vt_printf(vt,"\n%s%-28s: %s%s\n",ESC_BOLD,"Parameter","Value",ESC_RESET);
     vt_printf(vt,"%-28s: %s %s\n","rtklib version",VER_RTKLIB,PATCH_LEVEL);
-    vt_printf(vt,"%-28s: %d\n","rtk server thread",thread);
+    //vt_printf(vt,"%-28s: %d\n","rtk server thread",thread);
     vt_printf(vt,"%-28s: %s\n","rtk server state",svrstate[state]);
     vt_printf(vt,"%-28s: %d\n","processing cycle (ms)",cycle);
     vt_printf(vt,"%-28s: %s\n","positioning mode",mode[rtk.opt.mode]);
@@ -1463,10 +1470,10 @@ static int open_sock(int port)
     struct sockaddr_in addr;
     int sock,on=1;
     
-    trace(3,"open_sock: port=%d\n",port);
+    //trace(3,"open_sock: port=%d\n",port);
     
     if ((sock=socket(AF_INET,SOCK_STREAM,0))<0) {
-        fprintf(stderr,"socket error (%d)\n",errno);
+        fprintf(stderr,"socket error (%d)\n",WSAGetLastError());
         return 0;
     }
     setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,(const char *)&on,sizeof(on));
@@ -1485,15 +1492,13 @@ static int open_sock(int port)
 /* accept remote console connection ------------------------------------------*/
 static void accept_sock(int ssock, con_t **con)
 {
-    struct timeval tv={0};
+    struct timeval tv={1,0};
     struct sockaddr_in addr;
     socklen_t len=sizeof(addr);
     fd_set rs;
-    int i,sock;
+    int i,sock, err;
     
-    if (ssock<=0) return;
-    
-    trace(4,"accept_sock: ssock=%d\n",ssock);
+    if (ssock <= 0) return;
     
     for (i=1;i<MAXCON;i++) {
         if (!con[i]||con[i]->state) continue;
@@ -1502,18 +1507,24 @@ static void accept_sock(int ssock, con_t **con)
     }
     FD_ZERO(&rs);
     FD_SET(ssock,&rs);
-    if (select(ssock+1,&rs,NULL,NULL,&tv)<=0) {
+    err = select(ssock + 1, &rs, NULL, NULL, &tv);
+    if (err<=0) {
+        if (err == SOCKET_ERROR)
+            fprintf(stderr, "select <= 0: %i, %d\n", err, WSAGetLastError());
+        else
+            fprintf(stderr, "select < 0: %i\n", err);
         return;
     }
     if ((sock=accept(ssock,(struct sockaddr *)&addr,&len))<=0) {
+        //printf("Accept <= 0: %d\n", sock);
         return;
     }
     for (i=1;i<MAXCON;i++) {
         if (con[i]) continue;
-        
+
         con[i]=con_open(sock,"");
         
-        trace(3,"remote console connected: addr=%s\n",
+        trace(3, "remote console connected: addr=%s\n",
               inet_ntoa(addr.sin_addr));
         return;
     }
@@ -1670,6 +1681,9 @@ int main(int argc, char **argv)
     int i,port=0,outstat=0,trace=0,sock=0;
     char *dev="",file[MAXSTR]="";
     int deamon=0;
+    int error;
+    WSADATA wsaData;
+    WORD wVersionRequested = MAKEWORD(2, 2);
     
     for (i=1;i<argc;i++) {
         if      (!strcmp(argv[i],"-s")) start|=1; /* console */
@@ -1694,6 +1708,14 @@ int main(int argc, char **argv)
         traceopen(TRACEFILE);
         tracelevel(trace);
     }
+
+    error = WSAStartup(wVersionRequested, &wsaData);
+    if (error != 0)
+    {
+        fprintf(stderr, "WSAStartup failed with error: %d\n", error);
+        exit(0);
+    }
+
     /* initialize rtk server and monitor port */
     rtksvrinit(&svr);
     strinit(&moni);
@@ -1727,6 +1749,7 @@ int main(int argc, char **argv)
             if (moniport>0) closemoni();
             if (outstat>0) rtkclosestat();
             traceclose();
+            WSACleanup();
             return EXIT_FAILURE;
         }
     }
@@ -1739,14 +1762,15 @@ int main(int argc, char **argv)
             if (moniport>0) closemoni();
             if (outstat>0) rtkclosestat();
             traceclose();
+            WSACleanup();
             return EXIT_FAILURE;
         }
     }
     signal(SIGINT, sigshut); /* keyboard interrupt */
     signal(SIGTERM,sigshut); /* external shutdown signal */
-    signal(SIGUSR2,sigshut);
+    /*signal(SIGUSR2, sigshut);
     signal(SIGHUP ,SIG_IGN);
-    signal(SIGPIPE,SIG_IGN);
+    signal(SIGPIPE,SIG_IGN);*/
 
     while (!intflg) {
         /* accept remote console connection */
@@ -1768,5 +1792,6 @@ int main(int argc, char **argv)
         fprintf(stderr,"navigation data save error: %s\n",NAVIFILE);
     }
     traceclose();
+    WSACleanup();
     return 0;
 }

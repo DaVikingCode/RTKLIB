@@ -493,6 +493,7 @@ static serial_t *openserial(const char *path, int mode, char *msg)
         serial->tcpsvr=opentcpsvr(path_tcp,msg_tcp);
     }
     tracet(3,"openserial: dev=%d\n",serial->dev);
+    printf("[openserial] bitrate: %i, bytesize: %i, parity: %c, stopbit: %i, fctr: %s, tcp_port: %i\n", brate, bsize, parity, stopb, fctr, tcp_port);
     return serial;
 }
 /* close serial --------------------------------------------------------------*/
@@ -1740,6 +1741,7 @@ static ntrip_t *openntrip(const char *path, int type, char *msg)
         sprintf(port,"%d",type?NTRIP_CLI_PORT:NTRIP_SVR_PORT);
     }
     sprintf(tpath,"%s:%s",addr,port);
+    printf("Address: %s, Port: %s, User: %s, Password: %s, Mountpoint: %s, Str: %s\n",addr,port, ntrip->user, ntrip->passwd, ntrip->mntpnt, ntrip->str);
     
     /* ntrip access via proxy server */
     if (*proxyaddr) {
@@ -1842,7 +1844,8 @@ static ntripc_t *openntripc(const char *path, char *msg)
     /* decode tcp/ntrip path */
     decodetcppath(path,NULL,port,ntripc->user,ntripc->passwd,ntripc->mntpnt,
                   ntripc->srctbl);
-    
+
+    printf("Address: %s, Port: %s, User: %s, Password: %s, Mountpoint: %s, Str: %s\n", NULL, port, ntripc->user, ntripc->passwd, ntripc->mntpnt, ntripc->srctbl);
     if (!*ntripc->mntpnt) {
         tracet(2,"openntripc: no mountpoint path=%s\n",path);
         free(ntripc);

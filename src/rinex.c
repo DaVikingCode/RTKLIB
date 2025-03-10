@@ -117,6 +117,7 @@
 *                           use integer types in stdint.h
 *                           suppress warnings
 *-----------------------------------------------------------------------------*/
+#define ENAGLO
 #include "rtklib.h"
 
 /* constants/macros ----------------------------------------------------------*/

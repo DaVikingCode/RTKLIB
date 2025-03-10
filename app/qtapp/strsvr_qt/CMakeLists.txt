@@ -35,12 +35,6 @@ add_executable(strsvr_qt
     ../icon/resources.qrc
 
 )
-if(QT_VERSION GREATER_EQUAL 6.5)
-        qt_add_translations(TARGETS strsvr_qt
-		SOURCE_TARGETS strsvr_qt
-		INCLUDE_DIRECTORIES . ..appcmn_qt
-        )
-endif()
 target_link_libraries(strsvr_qt PRIVATE
         rtklib
         Qt${QT_VERSION_MAJOR}::Core
@@ -53,8 +47,4 @@ set_target_properties(strsvr_qt PROPERTIES
     WIN32_EXECUTABLE ON
     MACOSX_BUNDLE ON
 )
-install(TARGETS strsvr_qt RUNTIME DESTINATION bin)
-if (UNIX)
-   install(FILES strsvr_qt.desktop DESTINATION ${XDG_APPS_INSTALL_DIR})
-   install(FILES ../icon/strsvr.png DESTINATION ${XDG_APPS_PIXMAPS_DIR})
-endif()
+

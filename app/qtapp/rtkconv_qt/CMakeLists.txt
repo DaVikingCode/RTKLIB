@@ -33,13 +33,6 @@ add_executable(rtkconv_qt
     ../icon/resources.qrc
 
 )
-if(QT_VERSION GREATER_EQUAL 6.5)
-	qt_add_translations(rtkconv_qt
-		SOURCE_TARGETS rtkconv_qt
-                INCLUDE_DIRECTORIES . ..appcmn_qt
-        )
-endif()
-
 target_link_libraries(rtkconv_qt PRIVATE 
 	rtklib
 	Qt${QT_VERSION_MAJOR}::Core 
@@ -50,9 +43,3 @@ set_target_properties(rtkconv_qt PROPERTIES
     WIN32_EXECUTABLE ON
     MACOSX_BUNDLE ON
 )
-install(TARGETS rtkconv_qt RUNTIME DESTINATION bin)
-
-if (UNIX)
-   install(FILES rtkconv_qt.desktop DESTINATION ${XDG_APPS_INSTALL_DIR})
-   install(FILES ../icon/rtkconv.png DESTINATION ${XDG_APPS_PIXMAPS_DIR})
-endif()

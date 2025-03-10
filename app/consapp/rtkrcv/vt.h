@@ -8,7 +8,23 @@
 *-----------------------------------------------------------------------------*/
 #ifndef VT_H
 #define VT_H
-#include <termios.h>
+//#include <termios.h>
+
+#define NCCS 11
+
+typedef unsigned tcflag_t; /*This is an unsigned integer type used to represent the various bit masks for terminal flags.*/
+typedef unsigned cc_t; /*This is an unsigned integer type used to represent characters associated with various terminal control functions.*/
+typedef struct termios
+{
+
+    tcflag_t c_iflag; /*input modes*/
+    tcflag_t c_oflag; /*output modes*/
+    tcflag_t c_cflag; /*control modes*/
+    tcflag_t c_lflag; /*local modes*/
+    cc_t c_cc[NCCS]; /*special character*/
+
+} termios;
+
 #include "rtklib.h"
 
 #define MAXBUFF     4096                /* size of line buffer */

@@ -333,7 +333,7 @@ int main(int argc, char **argv)
         }
         else if (*argv[i]=='-') printhelp();
     }
-    if (n<=0) n=1; /* stdout */
+    if (n<=0) n = 1; /* stdout */
     
     for (i=0;i<n;i++) {
         if (fmts[i+1]<=0) continue;
@@ -366,8 +366,8 @@ int main(int argc, char **argv)
     if (deamon) deamonise();
     signal(SIGTERM,sigfunc);
     signal(SIGINT ,sigfunc);
-    signal(SIGHUP ,SIG_IGN);
-    signal(SIGPIPE,SIG_IGN);
+    //signal(SIGHUP ,SIG_IGN);
+    //signal(SIGPIPE,SIG_IGN);
     
     strsvrinit(&strsvr,n+1);
     

@@ -7,9 +7,11 @@ set(VERSION ${CMAKE_MATCH_1})
 string(REGEX MATCH "PATCH_LEVEL[ ]+\"([a-zA-Z0-9]*)\"" _ ${ver})
 set(PATCH_LEVEL ${CMAKE_MATCH_1})
 
-message("RTKLIB version: ${VERSION}-${PATCH_LEVEL}")
+set(MY_PROJECT_APP app_v${VERSION_MAJOR}_${VERSION_MINOR}_${VERSION_INTERNAL})
 
-project(rtklib LANGUAGES C CXX VERSION 2.4.3)
+message("RTKLIB version: ${VERSION}.${PATCH_LEVEL}")
+
+project(rtklib LANGUAGES C CXX)
 
 option(IERS_MODEL "Use Earth models from IERS" OFF)
 
@@ -40,18 +42,20 @@ if(QT_FOUND)
 endif()
 
 #CPACK: General Settings
-set(CPACK_GENERATOR "TBZ2" "RPM" "DEB")
+set(CPACK_GENERATOR "TBZ2")
 set(CPACK_PACKAGE_NAME "rtklib")
 set(CPACK_PACKAGE_DESCRIPTION "Rtklib is a library and GUI frontend for GNSS (Global Navigation Satellite Systems) raw data processing, visualisation and analysis. It support both, real-time kinematik (RTK) and precise point positioning (PPP) processing.")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Libraries and Tools to process GNSS data.")
 set(CPACK_PACKAGE_VENDOR "")
-set(CPACK_PACKAGE_CONTACT "Jens Reimann")
-set(CPACK_PACKAGE_VERSION ${CMAKE_PROJECT_VERSION}-${VERSION})
+set(CPACK_PACKAGE_CONTACT "")
+set(CPACK_PACKAGE_VERSION_MAJOR "${RTKLIB_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${RTKLIB_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${RTKLIB_VERSION_PATCH}")
+set(CPACK_PACKAGE_VERSION "${RTKLIB_VERSION}")
 
 #CPACK: RPM Specific Settings
 set(CPACK_RPM_PACKAGE_LICENSE "GPLv2+")
 set(CPACK_RPM_PACKAGE_GROUP "Development/Tools")
-set(CPACK_RPM_PACKAGE_VERSION ${VERSION}.${PATCH_LEVEL})
 
 #CPACK: DEB Specific Settings
 set(CPACK_DEBIAN_PACKAGE_SECTION "Development")

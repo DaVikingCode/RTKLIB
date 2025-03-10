@@ -16,6 +16,9 @@
 #include <ctype.h>
 #ifdef WIN32
 #include <winsock2.h>
+#include <io.h>
+#include <fcntl.h>
+#define TCSANOW 0
 #else
 #include <unistd.h>
 #include <fcntl.h>
@@ -88,6 +91,7 @@ extern vt_t *vt_open(int sock, const char *dev)
         vt->in=vt->out=sock;
         
         /* send telnet character mode */
+        printf("[vt_open] sock: %d, mode: %s\n", sock, mode);
         if (write(sock,mode,6)!=6) {
             free(vt);
             return NULL;
